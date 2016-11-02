@@ -1,0 +1,22 @@
+{
+    "name": "bttree/sm-yii2-upload",
+    "description": "Sitemaket yii2 upload",
+    "type": "yii2-behavior",
+    "keywords": ["yii2", "image", "thumbnail", "upload"],
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "SiteMaket team",
+            "email": "dev@sitemaket.ru"
+        }
+    ],
+    "require": {
+        "kartik-v/yii2-widget-fileinput": "@dev",
+        "mihaildev/yii2-elfinder": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "bttree\\smyupload\\": ""
+        }
+    }
+}
