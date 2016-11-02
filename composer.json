@@ -12,8 +12,7 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "kartik-v/yii2-widget-fileinput": "@dev",
-        "mihaildev/yii2-elfinder": "*"
+        "kartik-v/yii2-widget-fileinput": "@dev"
     },
     "autoload": {
         "psr-4": {
