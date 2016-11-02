@@ -12,11 +12,12 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "kartik-v/yii2-widget-fileinput": "@dev"
+        "kartik-v/yii2-widget-fileinput": "@dev",
+        "mihaildev/yii2-elfinder": "*"
     },
     "autoload": {
         "psr-4": {
             "bttree\\smyupload\\": ""
         }
-    }
+    },
 }
