@@ -12,12 +12,17 @@ class UploadManager extends Component
     /**
      * @var string - Путь к корневой директории для загрузки
      */
-    public $uploadPath = '@static';
+    public $uploadPath = '';
 
     /**
      * @var string - Url к корневой папке загрузок
      */
-    public $uploadUrl = '@staticUrl';
+    public $uploadUrl = '';
+
+    public function init()
+    {
+        parent::init();
+    }
 
     /**
      * @param UploadedFile $fileInstance
