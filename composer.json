@@ -19,10 +19,5 @@
         "psr-4": {
             "bttree\\smyupload\\": ""
         }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "v1.0.1"
-        }
     }
 }
