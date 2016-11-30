@@ -53,7 +53,7 @@ class FileUploadBehavior extends Behavior
     /**
      * @var UploadManager
      */
-    protected $uploadManager;
+    public $uploadManager;
 
     /**
      * @inheritdoc
@@ -61,8 +61,10 @@ class FileUploadBehavior extends Behavior
     public function init()
     {
         parent::init();
+        if(empty($this->uploadManager)) {
+            $this->uploadManager = Yii::$app->upload;
+        }
 
-        $this->uploadManager = Yii::$app->upload;
     }
 
     /**
