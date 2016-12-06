@@ -1,7 +1,7 @@
 {
     "name": "bttree/sm-yii2-upload",
     "description": "SiteMaket yii2 upload",
-    "type": "yii2-behavior",
+    "type": "yii2-extension",
     "keywords": ["yii2", "image", "thumbnail", "upload"],
     "license": "BSD-3-Clause",
     "authors": [
