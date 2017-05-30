@@ -12,6 +12,8 @@ class FileUploadBehavior extends Behavior
 {
     public $attribute = 'file';
 
+    public $base_name = false;
+
     /**
      *
      * @var string the name of the file input field, used to get instance by name.
@@ -110,6 +112,10 @@ class FileUploadBehavior extends Behavior
                 ]
             );
             $validator->validateAttribute($model, $this->attribute);
+        }
+
+        if($this->base_name){
+            $model->{$this->base_name} = $this->uploadedFile->name;
         }
     }
 
