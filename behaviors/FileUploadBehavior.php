@@ -114,7 +114,7 @@ class FileUploadBehavior extends Behavior
             $validator->validateAttribute($model, $this->attribute);
         }
 
-        if($this->base_name){
+        if($this->uploadedFile && $this->uploadedFile->name && $this->base_name){
             $model->{$this->base_name} = $this->uploadedFile->name;
         }
     }
