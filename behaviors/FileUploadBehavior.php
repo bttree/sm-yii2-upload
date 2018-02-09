@@ -1,6 +1,7 @@
 <?php
 namespace bttree\smyupload\behaviors;
 
+use bttree\smyupload\components\UploadManager;
 use Yii;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
@@ -58,6 +59,21 @@ class FileUploadBehavior extends Behavior
     public $uploadManager;
 
     /**
+     * @var string
+     */
+    public $chunk = false;
+
+    /**
+     * @var string
+     */
+    public $chunkComplite = false;
+
+    /**
+     * @var string
+     */
+    public $tmpChunkDir = 'file_chunk_tmp';
+
+    /**
      * @inheritdoc
      */
     public function init()
@@ -67,6 +83,7 @@ class FileUploadBehavior extends Behavior
             $this->uploadManager = Yii::$app->upload;
         }
 
+        $this->chunk = boolval(Yii::$app->getRequest()->getBodyParam('dzchunksize', false));
     }
 
     /**
@@ -146,16 +163,61 @@ class FileUploadBehavior extends Behavior
     protected function saveFile()
     {
         $path = $this->getNewFilePath($this->uploadedFile);
-        $this->uploadManager->saveFile($this->uploadedFile, $path);
-        $this->owner->{$this->attribute} = $path;
+
+        if ($this->chunk) {
+            $chunkPath = $this->getChunkTmpPath($this->uploadedFile);
+            $result    = $this->uploadManager->saveFileByChunk($this->uploadedFile, $path, $chunkPath);
+
+            if($result === UploadManager::CHUNK_SAVE_DONE) {
+                $this->chunkComplite = true;
+                $this->owner->{$this->attribute} = $path;
+
+                $this->owner->clearErrors('path');
+            } else {
+                $this->owner->addError('path', 'Chunk process!');
+            }
+
+        } else {
+            $this->uploadManager->saveFile($this->uploadedFile, $path);
+            $this->owner->{$this->attribute} = $path;
+        }
     }
 
     protected function getNewFilePath(UploadedFile $uploadedFile)
     {
-        $uid = md5(uniqid($this->getUploadPath()));
-        $path = $this->getUploadPath() . '/' . substr($uid, 0, 2) . '/' . substr($uid, 2, 2) . '/' . substr($uid, 4) . '.' . $uploadedFile->getExtension();
+        $basePath = $this->getUploadPath();
+
+        $uid  = md5(uniqid($basePath));
+        $dir1 = substr($uid, 0, 2);
+        $dir2 = substr($uid, 2, 2);
+        $name = substr($uid, 4);
+        $ext  = $uploadedFile->getExtension();
+
+        $path = "{$basePath}/{$dir1}/{$dir2}/{$name}.{$ext}";
+
         $path = FileHelper::normalizePath($path, '/');
+
         return $path;
+    }
+
+    /**
+     * @return string
+     */
+    protected function getChunkTmpPath(UploadedFile $uploadedFile)
+    {
+        $runtimePath = Yii::$app->runtimePath;
+        $tmpDir      = $this->tmpChunkDir;
+        $fileName    = md5(Yii::$app->getRequest()->getBodyParam('dzuuid'));
+        $ext         = $uploadedFile->getExtension();
+        $tmpDirPath  = "{$runtimePath}/{$tmpDir}";
+
+        if (!FileHelper::createDirectory($tmpDirPath)) {
+            throw new HttpException(500, sprintf('Не удалось создать папку «%s»', $tmpPath));
+        }
+
+        $tmpPath = "{$tmpDirPath}/{$fileName}.{$ext}";
+
+        return $tmpPath;
     }
 
     protected function getUploadPath()
