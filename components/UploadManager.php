@@ -48,42 +48,46 @@ class UploadManager extends Component
 
     /**
      * @param UploadedFile $chunkfileInstance
-     * @param $fileName - Полный путь в папке загрузок, например, /uploads/module/model/000000.png
-     * @return bool
+     * @param string       $filePath
+     * @param string       $chunkPath
+     * @param array        $chunkParams
+     * @return integer
      * @throws HttpException
+     * @throws \yii\base\Exception
      */
-    public function saveFileByChunk(UploadedFile $chunkfileInstance, $filePath, $chunkPath)
+    public function saveFileByChunk(UploadedFile $chunkfileInstance, $filePath, $chunkPath, $chunkParams)
     {
-        $filePath = $this->getFilePath($filePath);
+        $totalSize = self::fixIntegerOverflow($chunkParams['totalSize']);
+        $filePath  = $this->getFilePath($filePath);
 
         $chunkPathDir = dirname($chunkPath);
         if (!FileHelper::createDirectory($chunkPathDir)) {
             throw new HttpException(500, sprintf('Не удалось создать папку «%s»', $chunkPathDir));
         }
-        $filePathDir  = dirname($filePath);
-        if (!FileHelper::createDirectory($filePathDir)) {
-            throw new HttpException(500, sprintf('Не удалось создать папку «%s»', $filePathDir));
-        }
 
-        $chunk = $chunkfileInstance->tempName;
+        $chunk     = $chunkfileInstance->tempName;
         $chunkSize = $chunkfileInstance->size;
 
-        if(is_file($chunkPath)) {
-            $fileSize = filesize($chunkPath);
-        } else {
-            $fileSize = 0;
+
+        $fileSize = 0;
+        if (is_file($chunkPath)) {
+            if($chunkParams['index'] > 0) {
+                $fileSize = self::getFileSize($chunkPath);
+            } else {
+                unlink($chunkPath);
+            }
         }
 
-        $done      = false;
-        $totalSize = Yii::$app->getRequest()->getBodyParam('dztotalfilesize');
-        if ($fileSize < $totalSize) {
+        $done = false;
+
+        if (($fileSize < $totalSize) && ($chunkParams['index'] < $chunkParams['totalCount'])) {
             file_put_contents(
                 $chunkPath,
                 fopen($chunk, 'r'),
                 FILE_APPEND
             );
 
-            if (filesize($chunkPath) >= $totalSize) {
+            if (self::getFileSize($chunkPath) >= $totalSize) {
                 $done = true;
             }
         } else {
@@ -91,6 +95,12 @@ class UploadManager extends Component
         }
 
         if ($done) {
+
+            $filePathDir = dirname($filePath);
+            if (!FileHelper::createDirectory($filePathDir)) {
+                throw new HttpException(500, sprintf('Не удалось создать папку «%s»', $filePathDir));
+            }
+
             rename($chunkPath, $filePath);
 
             return self::CHUNK_SAVE_DONE;
@@ -99,8 +109,6 @@ class UploadManager extends Component
         }
 
         return self::CHUNK_SAVE_ERROR;
-
-//        return $fileInstance->saveAs($path);
     }
 
     /**
@@ -130,5 +138,36 @@ class UploadManager extends Component
     public function getFileUrl($name)
     {
         return rtrim(Yii::getAlias($this->uploadUrl), '/') . '/' . ltrim(str_replace('\\', '/', $name), '/');
+    }
+
+    /**
+     * @param string  $filePath
+     * @param boolean $clearStatCache
+     * @return float
+     */
+    public static function getFileSize($filePath, $clearStatCache = true)
+    {
+        if ($clearStatCache) {
+            if (version_compare(PHP_VERSION, '5.3.0') >= 0) {
+                clearstatcache(true, $filePath);
+            } else {
+                clearstatcache();
+            }
+        }
+
+        return self::fixIntegerOverflow(filesize($filePath));
+    }
+
+    /**
+     * @param $size
+     * @return float
+     */
+    protected static function fixIntegerOverflow($size)
+    {
+        if ($size < 0) {
+            $size += 2.0 * (PHP_INT_MAX + 1);
+        }
+
+        return $size;
     }
 }
