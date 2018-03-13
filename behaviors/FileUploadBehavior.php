@@ -252,15 +252,13 @@ class FileUploadBehavior extends Behavior
 
     protected function getNewFilePath(UploadedFile $uploadedFile)
     {
-        $basePath = '';//$this->getUploadPath();
+        $basePath = $this->getUploadPath();
 
         $uid  = md5(uniqid($basePath));
-        $dir1 = substr($uid, 0, 2);
-        $dir2 = substr($uid, 2, 2);
-        $name = substr($uid, 4);
+        $dir1 = substr($uid, 0, 3);
         $ext  = $uploadedFile->getExtension();
 
-        $path = "{$basePath}/{$dir1}/{$dir2}/{$name}.{$ext}";
+        $path = "{$basePath}/{$dir1}/{$uid}.{$ext}";
 
         $path = FileHelper::normalizePath($path, '/');
 
